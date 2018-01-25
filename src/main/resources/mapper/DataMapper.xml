@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xj.iws.http.dao.DataDao">
+    <insert id="insetDataToDB">
+        insert into `${tableName}`(deviceid,data)
+        VALUES (#{deviceid},#{data})
+    </insert>
+
+    <select id="existTable" resultType="int">
+        SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='iws1.0' AND TABLE_NAME=#{tableName}
+    </select>
+
+    <update id="createTable">
+        CREATE TABLE `${tableName}` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `deviceid` int(11) NOT NULL,
+  `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `data` varchar(1000) DEFAULT NULL,
+  `error` VARCHAR (255) DEFAULT NULL ,
+  PRIMARY KEY (`id`),
+  KEY `index_deviceid` (`deviceid`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=104 DEFAULT CHARSET=utf8;
+    </update>
+
+
+
+</mapper>

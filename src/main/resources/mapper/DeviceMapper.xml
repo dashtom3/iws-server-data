@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xj.iws.http.dao.DeviceDao">
+
+    <sql id="pointField">termid,number,roleid,name,describes,unit,min,max,multiple</sql>
+
+    <resultMap id="Command" type="com.xj.iws.server.receive.Command">
+        <result column="termid" property="termId" jdbcType="INTEGER"/>
+        <result column="number" property="number" jdbcType="VARCHAR"/>
+        <result column="count" property="count" jdbcType="INTEGER"/>
+        <result column="type" property="type" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <resultMap id="PointFieldEntity" type="com.xj.iws.http.entity.PointFieldEntity">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="termid" property="termId" jdbcType="INTEGER"/>
+        <result column="number" property="number" jdbcType="INTEGER"/>
+        <result column="roleid" property="roleId" jdbcType="INTEGER"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="describes" property="describes" jdbcType="VARCHAR"/>
+        <result column="unit" property="unit" jdbcType="VARCHAR"/>
+        <result column="min" property="min" jdbcType="DOUBLE"/>
+        <result column="max" property="max" jdbcType="DOUBLE"/>
+        <result column="multiple" property="multiple" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <select id="getIP" resultType="String">
+        SELECT ip FROM server WHERE id = 1
+    </select>
+
+    <select id="getServerPort" resultType="String">
+        SELECT port FROM server WHERE id = 1
+    </select>
+
+    <select id="getPort" resultType="String">
+        SELECT port FROM device WHERE groupid = ${_parameter} GROUP BY port
+    </select>
+
+    <select id="getPortByDevice" resultType="String">
+        SELECT port FROM device WHERE id = ${_parameter}
+    </select>
+
+    <select id="getCommands" resultMap="Command">
+        SELECT termid,number,count,type FROM device d
+        LEFT JOIN deviceterm t ON d.termid = t.id
+        WHERE groupid = ${_parameter}
+    </select>
+
+    <select id="getCommand" resultMap="Command">
+        SELECT termid,number,count,type FROM device d
+        LEFT JOIN deviceterm t ON d.termid = t.id
+        WHERE d.id = ${_parameter}
+    </select>
+
+    <select id="getAddress" resultType="String">
+        SELECT address FROM pointfield WHERE termid = ${_parameter}
+    </select>
+
+    <select id="getCount" resultType="int">
+        SELECT count FROM deviceterm WHERE id = ${_parameter}
+    </select>
+
+    <select id="getType" resultType="int">
+        SELECT type FROM deviceterm WHERE id = ${_parameter}
+    </select>
+
+    <select id="getTermId" resultType="int">
+        SELECT termid FROM device WHERE id = ${_parameter}
+    </select>
+
+    <select id="getBit" resultType="int">
+        SELECT tp.bit FROM device d
+        LEFT JOIN deviceterm tm ON d.termid = tm.id
+        LEFT JOIN devicetype tp ON tm.type = tp.id
+        WHERE d.id = ${_parameter}
+    </select>
+
+    <select id="getBitByType" resultType="int">
+        SELECT bit FROM devicetype WHERE id = ${_parameter}
+    </select>
+
+    <select id="getPointField" parameterType="int" resultMap="PointFieldEntity">
+        SELECT id,
+        <include refid="pointField"/>
+        FROM pointfield WHERE termid = ${_parameter}
+    </select>
+
+    <select id="getId" resultType="int">
+        SELECT id FROM device WHERE port = '${port}' AND number = '${number}'
+    </select>
+
+    <select id="getRunningGroup" resultType="String">
+        SELECT DISTINCT a.id FROM
+        devicegroup a,
+        device b,
+        deviceterm c
+         WHERE a.id=b.groupid and b.termid=c.id and a.status = 1 and c.protocol='MODBUS'
+    </select>
+
+    <select id="getNewRunningGroup" resultType="String">
+        SELECT DISTINCT id FROM
+        devicegroup
+        WHERE status = 1
+    </select>
+
+    <select id="getDataInfo" resultType="HashMap">
+        SELECT d.id AS deviceId, tm.count, tp.bit
+        FROM device d
+        LEFT JOIN deviceterm tm ON d.termid = tm.id
+        LEFT JOIN devicetype tp ON tm.type = tp.id
+        WHERE d.port = '${port}' AND d.number = '${number}'
+    </select>
+
+
+    <select id="getNewDeviceTermEntity" resultType="java.util.Map">
+        SELECT a.port,a.id,b.start,a.termid FROM
+        device a
+        left join deviceterm b on a.termid=b.id
+        where a.groupid IN
+        <foreach collection="list" index="index" item="item" close=")" open="(" separator=",">
+            #{item}
+        </foreach>
+        AND b.protocol='TCP'
+    </select>
+
+    <select id="getLength" resultType="int">
+        SELECT sum(b.bit) as length FROM
+        pointfield a
+        left join pointrole b  on a.roleid=b.id
+        where a.termid=#{termid}
+    </select>
+
+    <select id="getDeviceTermNameByDeviceId" resultType="string">
+        select b.name FROM
+        device a,
+        deviceterm b
+        where a.id=#{key} and a.termid=b.id
+    </select>
+
+
+
+</mapper>
